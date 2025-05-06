@@ -15,40 +15,43 @@ library(scales)
 ```
 
 ```{r eval = FALSE}
-quakersaints <-  gutenberg_download(c(19605))
+WilliamAugustineBrennan <-  gutenberg_download(c(37388))
 ```
 
 ```{r}
 
-tidy_quakersaints <- quakersaints |>
+tidy_WilliamAugustineBrennan <- WilliamAugustineBrennan |>
   unnest_tokens(word, text) 
 ```
 
 View the tidied data. 
 ## What does unnest_tokens() do?
+  the unnest_tokens gives each word it's own unique ID.
 
 One think that would be convenient is to be able to reconstruct where in the text the particular token came from.
 For example we could track the row number in the original data.
 
 ```{r}
 
-tidy_quakersaints <- quakersaints |> 
+tidy_WilliamAugustineBrennan<- WilliamAugustineBrennan |> 
   mutate(row = row_number()) |>
   unnest_tokens(word, text) 
+save(tidy_WilliamAugustineBrennan,file = "tidy_WilliamAugustineBrennan.rda")
 ```
 ## View the data. How does it differ? 
 
+the data differ's as it includes the row number when you mutate.
 
 Let's find the most common words
 
 
 ```{r}
-tidy_quakersaints |>  count(word, sort = TRUE)
+tidy_WilliamAugustineBrennan |>  count(word, sort = TRUE)
 ```
 
 ## What do you notice about the most common words?  Are they interesting? Do they have anythig in common?
 
-
+what i notice about the most common words is that they are used to connect or give meaning to a sentence or phrase.
 
 In text data "stop words" are words that are common and not meaningful. They are words we don't want to include in our data.  
 This  is a judgement, but to keep it simple, let's use the stop word list from the tidy text package.
@@ -56,17 +59,19 @@ This list comes from three different lexicons so we could pick one, but for our 
 
 Use View()  to look at the stop words.
 
-
 ```{r}
-
-tidy_quakersaints <- quakersaints |>
+  
+No_Stop_Words_WilliamAugustineBrennan <- WilliamAugustineBrennan |>
    mutate(row = row_number()) |>
   unnest_tokens(word, text) |>
   anti_join(stop_words)
+save(No_Stop_Words_WilliamAugustineBrennan, file = "No_Stop_Words.rda")
 ```
 
-
 What is an anti-join?
+
+Anti-join returns all rows from x without a match in Y. used to identify observations that exist in the first dataset and not in the second set.
+
 ```{}
 
 ```
@@ -75,9 +80,10 @@ Notice that I use `|>` instead of `%>%` ... this is newer style and does not req
 
 
 ```{r}
-tidy_quakersaints |>  count(word, sort = TRUE)
+tidy_WilliamAugustineBrennan |>  count(word, sort = TRUE)
 ```
 How does this list of the most frequent words differ from the first one? 
 
+the data set containes words related to the topic being spoken about such as, nicotine, Leaves, and cigarettes and does not include connecting words like; the, a ,and as.
 
 

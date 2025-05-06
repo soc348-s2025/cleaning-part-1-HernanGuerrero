@@ -23,11 +23,11 @@ I will have one or the other one change to `eval = TRUE`
 
 ```{r eval = FALSE}
 
-quakersaints <-  gutenberg_download(c(19605))
-save(quakersaints, file="data/quakersaints.rda")
+WilliamAugustineBrennan <- gutenberg_download(c(37388))
+save (WilliamAugustineBrennan, file="WAB.rda")
 ```
 ```{r eval=FALSE}
-load("quakersaints.rda")
+load("WAB.rda")
 ```
 
 Previously, we dove straight into tokenizing. But this time let's 
@@ -46,7 +46,7 @@ Using this information, I can subset the data.
 
 ```{r}
 
-table_of_contents <- quakersaints[190:260,] 
+table_of_contents <- WilliamAugustineBrennan[6:180,] 
 # Remove blank lines
 table_of_contents <- table_of_contents |> filter(text != "")
 table_of_contents$text
@@ -54,6 +54,8 @@ table_of_contents$text
 
 What do you notice about the table of contents? 
 I see at least 3 issues.
+
+i notice that the table of content gives a brief introduction into what the story will be about while also leaning into the first paragraph.
 
 ```{r}
 table_of_contents <- table_of_contents |>
@@ -96,7 +98,7 @@ I'm going to cut down the quakersaints data so that it just contains
 text after the table of contents and list of illustrations. 
 
 ```{r}
-quakersaints_trimmed <- quakersaints[290:nrow(quakersaints), ]
+WilliamAugustineBrennan_trimmed <- WilliamAugustineBrennan[185:nrow(WilliamAugustineBrennan), ]
 ```
 
 I'll also add a variable to represent the line number in the trimmed
@@ -105,40 +107,41 @@ As usual there are many ways to do this, I'll use the base method so
 you see it , but `mutate(id = row_number())` will also work.
 
 ```{r}
-quakersaints_trimmed$row_number <- seq.int(nrow(quakersaints_trimmed))
+WilliamAugustineBrennan_trimmed$row_number <- seq.int(nrow(WilliamAugustineBrennan_trimmed))
 ```
 
 Let's find the chapter titles in the text.
 
 ```{r}
 title_locations <- 
-  quakersaints_trimmed |> 
+  WilliamAugustineBrennan_trimmed |> 
   filter(text %in% table_of_contents$text)
 title_locations
 ```
+by putting title_locations and clicking run, when you skim through the pages that pop up you see "chapter I" pop up in the line of the text to where you will find the title.
+
 
 ```{r}
 title_locations <- 
-  quakersaints_trimmed |> 
+  WilliamAugustineBrennan_trimmed |> 
   filter(trimws(text) %in% trimws(table_of_contents$text))
 title_locations
 ```
 Notice that we lost the younger variable.
-
+ yes i did notice.
+ 
+ 
 Maybe a better way to do this would be to use a join.
 
 ```{r}
-table_of_contents |> left_join(quakersaints_trimmed, 
+table_of_contents |> left_join(WilliamAugustineBrennan_trimmed, 
                                by = c("gutenberg_id", "text")) ->
   table_of_contents
 ```
 
-
-
-
 What's the problem now?   
 Go back and look at the text. 
-
+   the problem now is that the table of content has lost the text and row number x and row number y appear now.
 
 We can use this information to say what kind of text each line is. 
 The case_when() function is useful when we have complicated if then/else if/ 
@@ -146,7 +149,7 @@ else if .../else situations.
 
 ```{r}
 title_locations <- 
-  quakersaints_trimmed |> 
+  WilliamAugustineBrennan_trimmed |> 
   mutate(text = trimws(text)) |>
   right_join(table_of_contents, by = c("text", "row_number", "gutenberg_id")) |>
   group_by(text) |> 
@@ -184,14 +187,14 @@ we will fill that using the title.
 
 ```{r}
 
-quakersaints_trimmed |> 
+WilliamAugustineBrennan_trimmed |> 
   left_join(title_locations, by = c("row_number", "gutenberg_id")) |>
   # We get text.y and text.x because text is in both data frames,
   # but not in the by vector.
   rename(title = text.y, text = text.x) |>
   mutate(text_type = case_when(is.na(text_type) ~ "Text",
                                TRUE ~ text_type)) |>
-  fill(title) |> fill(section_type) |> fill(younger) -> quakersaints_trimmed
+  fill(title) |> fill(section_type) |> fill(younger) -> WilliamAugustineBrennan_trimmed
 
 ```
 
@@ -206,9 +209,8 @@ I may also want to eliminate the titles from my analyses.
 
 So now I will tokenize.
 ```{r}
-quakersaints_trimmed |> filter(text_type == "Text") |>
-  unnest_tokens(word, text, to_lower = TRUE) ->
-  quakersaints_long
+WilliamAugustineBrennan_trimmed |> filter(text_type == "text") |>
+  unnest_tokens(word, text, to_lower = TRUE) -> WilliamAugustineBrennan_long
 
 ```
 
@@ -217,28 +219,28 @@ the stop words.
 
 ```{r}
 
-quakersaints_long |>  
+WilliamAugustine_long |>  
   mutate(word = str_extract(word, "[a-z']+")) |>
   anti_join(stop_words) ->
-  quakersaints_long
+  WilliamAugustine_long
 
 ```
 
 Let's look at the top 20 words in the book as a whole. 
 
 ```{r}
-quakersaints_long |> count(word, sort = TRUE) |> head(20)
+WilliamAugustine_long |> count(word, sort = TRUE) |> head(20)
 ```
 
 Looking these over, what should I drop?  How could I have done this 
 earlier? 
 
 ```{r}
-quakersaints_long <- quakersaints_long |> filter (is.na(word) == FALSE)
-quakersaints_long |> count(word, sort = TRUE) |> head(20)
-quakersaints_long |> group_by(section_type) |> count(word, sort = TRUE) |>
+WilliamAugustine_long <- WilliamAugustine_long |> filter (is.na(word) == FALSE)
+WilliamAugustine_long |> count(word, sort = TRUE) |> head(20)
+WilliamAugustine_long |> group_by(section_type) |> count(word, sort = TRUE) |>
   slice_head(n = 15)
-quakersaints_long |> group_by(section_type) |> count(word, sort = TRUE) |>
+WilliamAugustine_long |> group_by(section_type) |> count(word, sort = TRUE) |>
   mutate(proportion = n / sum(n)) |> select(-n) |>
    pivot_wider(values_from = proportion, names_from = section_type) -> qs_props_section_type
 ```
@@ -258,7 +260,7 @@ ggplot(qs_props_section_type, aes(x = Epigraph, y = Story,
 ```
 
 ```{r}
-quakersaints_long |> group_by(younger) |> count(word, sort = TRUE) |>
+williamAugustine_long |> group_by(younger) |> count(word, sort = TRUE) |>
   mutate(proportion = n / sum(n)) |> select(-n) |>
    pivot_wider(values_from = proportion, names_from = younger) -> qs_props_younger
 
@@ -280,7 +282,7 @@ ggplot(qs_props_younger, aes(x = `TRUE`, y = `FALSE`,
 
 
 ```{r }
-quakersaints_long |> group_by(title) |> count(word, sort = TRUE) |>
+WilliamAugustine_long |> group_by(title) |> count(word, sort = TRUE) |>
   slice_head(n = 10) |> 
    ungroup() |>
   #mutate(word = reorder(word, n)) |>
@@ -295,10 +297,10 @@ quakersaints_long |> group_by(title) |> count(word, sort = TRUE) |>
 This is really smushed so I want to split it up and use a smaller 
 font.
 ```{r }
-quakersaints_long |> group_by(title) |> count(word, sort = TRUE) |>
+WilliamAugustine_long |> group_by(title) |> count(word, sort = TRUE) |>
   slice_head(n = 10) |>
  mutate(word = reorder(word, n)) |>
-  ungroup() -> preprocessed
+  ungroup() -> preprocess
 
 
 
